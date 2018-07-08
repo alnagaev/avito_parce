@@ -59,6 +59,7 @@ def get_page_data(html):
 def pandas_open(file):
     df = pd.read_csv(file)
     return df.ix[:, 3].tolist()
+    print(df.ix[:, 3].tolist())
 
 
 class Bot:
@@ -121,16 +122,9 @@ def concat():
 
 
 def main():
-    url = 'https://www.avito.ru/sankt-peterburg/produkty_pitaniya?p=2&user=1&q=%D1%80%D1%8B%D0%B1%D0%B0'
-    base_url = 'https://www.avito.ru/sankt-peterburg/produkty_pitaniya?'
-    page_part = 'p='
-    query_part = '&user=1&q=%D1%80%D1%8B%D0%B1%D0%B0'
-    total_pages = get_total_pages(get_gtml(url))
-    for i in range(1, total_pages+1):
-        url_gen = base_url + page_part + str(i) + query_part
-        # print(url_gen)
-        html = get_gtml(url_gen)
-        get_page_data(html)
+    url = 'https://www.avito.ru/sankt-peterburg/produkty_pitaniya/keta_potroshenaya_individualnoy_zamorozkikamchatka_1124270783'
+    html = get_gtml(url_gen)
+    get_page_data(html)
     concat()
 
 if __name__ == '__main__':
