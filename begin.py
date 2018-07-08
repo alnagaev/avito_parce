@@ -58,8 +58,8 @@ def get_page_data(html):
 
 def pandas_open(file):
     df = pd.read_csv(file)
-    return df.ix[:, 3].tolist()
     print(df.ix[:, 3].tolist())
+    return df.ix[:, 3].tolist()
 
 
 class Bot:
@@ -99,11 +99,13 @@ class Bot:
                     f.write(img)
                 image = Image.open('imageToSave.png')
                 result = pytesseract.image_to_string(image)
+                print(result)
                 self.numbers.append(result)
                 with open("result.txt", "a") as fil:
                     fil.write(result + ',')
 
             except Exception as e:
+               print(str(e))
                result = 'Empty'
                self.numbers.append(result)
                with open("result.txt", "a") as fil:
@@ -111,19 +113,27 @@ class Bot:
         self.df['names'] =  self.names
         self.df['numbers'] = self.numbers
         self.driver.quit()
+        print(self.df)
         return self.df
 
 
 def concat():
     df1 = pd.read_csv('avito.csv')
     df2 = Bot(pandas_open('avito.csv')).navigate()
-    df = pd.DataFrame.concat([df1, df2], axis=1)
+    df = pd.concat([df1, df2], axis=1)
     return df.to_csv('avito_full', sep='\t', encoding='utf-8')
 
 
 def main():
-    url = 'https://www.avito.ru/sankt-peterburg/produkty_pitaniya/keta_potroshenaya_individualnoy_zamorozkikamchatka_1124270783'
-    html = get_gtml(url_gen)
+    url = 'https://www.avito.ru/sankt-peterburg/rabota?s_trg=3&q=%D1%81%D0%BE%D1%86%D0%B8%D0%BE%D0%BB%D0%BE%D0%B3'
+    # base_url = 'https://www.avito.ru/sankt-peterburg/produkty_pitaniya?'
+    # page_part = 'p='
+    # query_part = '&user=1&q=%D1%80%D1%8B%D0%B1%D0%B0'
+    # total_pages = get_total_pages(get_gtml(url))
+    # for i in range(1, total_pages+1):
+        # url_gen = base_url + page_part + str(i) + query_part
+        # print(url_gen)
+    html = get_gtml(url)
     get_page_data(html)
     concat()
 
