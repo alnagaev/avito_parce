@@ -2,6 +2,13 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import codecs
+import pandas as pd
+from selenium import webdriver
+from time import sleep
+import base64
+from PIL import Image
+import pytesseract
+
 
 
 def get_gtml(url):
@@ -49,6 +56,69 @@ def get_page_data(html):
                 'url': url}
         write_csv(data)
 
+def pandas_open(file):
+    df = pd.read_csv(file)
+    return df.ix[:, 3].tolist()
+
+
+class Bot:
+    def __init__(self, data):
+        self.data = data
+        self.driver = webdriver.Firefox()
+        self.navigate()
+
+
+    def take_screenshot(self):
+        self.driver.save_screenshot('avito_scr.png')
+
+
+    def navigate(self):
+        self.names = []
+        self.numbers  = []
+        self.df = pd.DataFrame()
+        for i in self.data:
+            try:
+                self.driver.get(i)
+                try:
+                    name = self.driver.find_element_by_xpath('//div[@class="seller-info-name"]/a').text
+                    self.names.append(name)
+                except:
+                    name = 'Не указано'
+                    self.names.append(name)
+                button = self.driver.find_element_by_xpath('//a[@class="button item-phone-button js-item-phone-button button-origin button-origin-blue button-origin_full-width button-origin_large-extra item-phone-button_hide-phone item-phone-button_card js-item-phone-button_card"]')
+                button.click()
+
+                sleep(2)
+                self.take_screenshot()
+
+                image = self.driver.find_element_by_xpath('//div[@class="item-phone-big-number js-item-phone-big-number"]/img')
+                image_src = image.get_attribute('src').split(',')[1]
+                img = base64.decodebytes(bytearray(image_src, 'utf-8'))
+                with open("imageToSave.png", "wb") as f:
+                    f.write(img)
+                image = Image.open('imageToSave.png')
+                result = pytesseract.image_to_string(image)
+                self.numbers.append(result)
+                with open("result.txt", "a") as fil:
+                    fil.write(result + ',')
+
+            except Exception as e:
+               result = 'Empty'
+               self.numbers.append(result)
+               with open("result.txt", "a") as fil:
+                   fil.write(result + ',')
+        self.df['names'] =  self.names
+        self.df['numbers'] = self.numbers
+        self.driver.quit()
+        return self.df
+
+
+def concat():
+    df1 = pd.read_csv('avito.csv')
+    df2 = Bot(pandas_open('avito.csv')).navigate()
+    df = pd.DataFrame.concat([df1, df2], axis=1)
+    return df.to_csv('avito_full', sep='\t', encoding='utf-8')
+
 
 def main():
     url = 'https://www.avito.ru/sankt-peterburg/produkty_pitaniya?p=2&user=1&q=%D1%80%D1%8B%D0%B1%D0%B0'
@@ -61,6 +131,7 @@ def main():
         # print(url_gen)
         html = get_gtml(url_gen)
         get_page_data(html)
+    concat()
 
 if __name__ == '__main__':
     main()
